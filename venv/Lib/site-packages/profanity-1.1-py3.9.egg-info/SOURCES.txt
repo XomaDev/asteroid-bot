@@ -1,0 +1,12 @@
+MANIFEST.in
+setup.cfg
+setup.py
+profanity/__init__.py
+profanity/console.py
+profanity/profanity.py
+profanity.egg-info/PKG-INFO
+profanity.egg-info/SOURCES.txt
+profanity.egg-info/dependency_links.txt
+profanity.egg-info/entry_points.txt
+profanity.egg-info/top_level.txt
+profanity/data/wordlist.txt
