@@ -1,9 +1,12 @@
 import logging
 
+from os import path
 import telegram
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 import better_profanity
 
+from configparser import ConfigParser
+import bingfo
 import chocolateo
 import commandscrape
 import functions
@@ -98,6 +101,7 @@ def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
     result = commandscrape.command_scrape(update.message.text[8:])
     parseMode = 'MarkdownV2'
 
+
     if result[1] == -1:
         update.message.reply_text(result[0])
     else:
@@ -105,10 +109,30 @@ def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
 
 
 def main() -> None:
-    updater = Updater("") # PUT BOT TOKEN HERE
+    """Start the bot."""
+    # parsing config.ini file
+    config = ConfigParser()
+    if not path.isfile('config.ini'):
+        printf("Missing settings.ini file... exiting.")
+        exit(-1)
 
+    config.read('config.ini')
+    api_id = config['AUTH']['API_ID']
+    api_hash = config['AUTH']['API_HASH']
+    bot_token = comnfig['AUTH']['bot_token']
+
+    if bot_token == "DUMMY":
+        print("Bot token missing in config.ini file... exiting.")
+        exit(-1)
+        
+
+    # Create the Updater and pass it your bot's token.
+    updater = Updater(bot_token) # BOT TOKEN
+
+    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
+    # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("answerx", answer))
@@ -120,7 +144,12 @@ def main() -> None:
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
+    # Start the Bot
     updater.start_polling()
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
