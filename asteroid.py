@@ -8,6 +8,7 @@ import better_profanity
 from configparser import ConfigParser
 import bingfo
 import chocolateo
+import commandscrape
 import functions
 from texttoaudio import toAudio
 
@@ -74,19 +75,19 @@ def answer(update: telegram.Update, _: CallbackContext) -> None:
 def info(update: telegram.Update, _: CallbackContext) -> None:
     try:
         i = update.message.text
-        result = bingfo.bingScrape(i[6:])
+        result = chocolateo.bingScrape(i[6:])
         update.message.reply_text(result)
     except:
         pass
 
 
-# def delete(update: telegram.Update, _: CallbackContext) -> None:
-#     try:
-#         update.message.bot.deleteMessage(chat_id=update.message.chat.id,
-#                                          message_id=update.message.reply_to_message.message_id)
-#         update.message.bot.deleteMessage(chat_id=update.message.chat.id, message_id=update.message.message_id)
-#     except:
-#         pass
+def delete(update: telegram.Update, _: CallbackContext) -> None:
+    try:
+        update.message.bot.deleteMessage(chat_id=update.message.chat.id,
+                                         message_id=update.message.reply_to_message.message_id)
+        update.message.bot.deleteMessage(chat_id=update.message.chat.id, message_id=update.message.message_id)
+    except:
+        pass
 
 
 def base64(update: telegram.Update, _: CallbackContext) -> None:
@@ -94,6 +95,17 @@ def base64(update: telegram.Update, _: CallbackContext) -> None:
         update.message.reply_text(functions.encode(update.message.text[8:]))
     except:
         pass
+
+
+def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
+    result = commandscrape.command_scrape(update.message.text[8:])
+    parseMode = 'MarkdownV2'
+
+
+    if result[1] == -1:
+        update.message.reply_text(result[0])
+    else:
+        update.message.reply_text(result[0], parse_mode=parseMode)
 
 
 def main() -> None:
@@ -124,10 +136,11 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("answerx", answer))
-#     dispatcher.add_handler(CommandHandler("delete", delete))
+    dispatcher.add_handler(CommandHandler("delete", delete))
     dispatcher.add_handler(CommandHandler("base64", base64))
     dispatcher.add_handler(CommandHandler("info", info))
     dispatcher.add_handler(CommandHandler("audio", texttoaudio))
+    dispatcher.add_handler(CommandHandler("scrape", commandScrape))
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
