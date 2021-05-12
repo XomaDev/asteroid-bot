@@ -100,7 +100,7 @@ def main() -> None:
     """Start the bot."""
     # parsing config.ini file
     config = ConfigParser()
-    if !path.isfile('config.ini'):
+    if not path.isfile('config.ini'):
         printf("Missing settings.ini file... exiting.")
         exit(-1)
 
