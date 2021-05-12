@@ -11,6 +11,7 @@ from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 from bs4 import BeautifulSoup
 
 SEARCH_URL = "https://www.google.com/search?q="
+BING_SEARCH_URL = "https://www.bing.com/search?q="
 
 # Wikipedia values
 
@@ -124,3 +125,21 @@ def web_scrape(text):
                     FINAL_RESULT = soup.find("div", {"class": "iKJnec"}).getText()
 
     return [FINAL_RESULT, MATCH_SOURCE_NAME]
+
+
+def bingScrape(text):
+    targetURL = BING_SEARCH_URL + quote(text, safe='')
+    web_request = request.Request(targetURL)
+    web_request.add_header("User-Agent", USER_AGENT)
+
+    response = request.urlopen(web_request).read()
+    decodedResponse = response.decode(DECODING_FORMAT)
+
+    bsSoup = BeautifulSoup(decodedResponse, HTML_PARSE_FORMAT)
+
+    try:
+        content = bsSoup.find("div", {"class": "b_lBottom"}).getText()
+
+        return content
+    except Exception:
+        return "No results found"
