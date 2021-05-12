@@ -105,46 +105,22 @@ def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
 
 
 def main() -> None:
-    """Start the bot."""
-    # parsing config.ini file
-    config = ConfigParser()
-    if !path.isfile('config.ini'):
-        printf("Missing settings.ini file... exiting.")
-        exit(-1)
+    updater = Updater("") # PUT BOT TOKEN HERE
 
-    config.read('config.ini')
-    api_id = config['AUTH']['API_ID']
-    api_hash = config['AUTH']['API_HASH']
-    bot_token = comnfig['AUTH']['bot_token']
-
-    if bot_token == "DUMMY":
-        print("Bot token missing in config.ini file... exiting.")
-        exit(-1)
-        
-
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(bot_token) # BOT TOKEN
-
-    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("answerx", answer))
-#     dispatcher.add_handler(CommandHandler("delete", delete))
+    dispatcher.add_handler(CommandHandler("delete", delete))
     dispatcher.add_handler(CommandHandler("base64", base64))
     dispatcher.add_handler(CommandHandler("info", info))
     dispatcher.add_handler(CommandHandler("audio", texttoaudio))
+    dispatcher.add_handler(CommandHandler("scrape", commandScrape))
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
-    # Start the Bot
     updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
