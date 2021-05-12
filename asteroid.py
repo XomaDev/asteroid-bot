@@ -1,9 +1,11 @@
 import logging
 
+from os import path
 import telegram
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 import better_profanity
 
+from configparser import ConfigParser
 import bingfo
 import chocolateo
 import functions
@@ -96,8 +98,24 @@ def base64(update: telegram.Update, _: CallbackContext) -> None:
 
 def main() -> None:
     """Start the bot."""
+    # parsing config.ini file
+    config = ConfigParser()
+    if !path.isfile('config.ini'):
+        printf("Missing settings.ini file... exiting.")
+        exit(-1)
+
+    config.read('config.ini')
+    api_id = config['AUTH']['API_ID']
+    api_hash = config['AUTH']['API_HASH']
+    bot_token = comnfig['AUTH']['bot_token']
+
+    if bot_token == "DUMMY":
+        print("Bot token missing in config.ini file... exiting.")
+        exit(-1)
+        
+
     # Create the Updater and pass it your bot's token.
-    updater = Updater("") # BOT TOKEN
+    updater = Updater(bot_token) # BOT TOKEN
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
