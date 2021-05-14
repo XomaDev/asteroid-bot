@@ -113,8 +113,7 @@ def main() -> None:
     # parsing config.ini file
     config = ConfigParser()
     if not path.isfile('config.ini'):
-        printf("Missing settings.ini file... exiting.")
-        exit(-1)
+        print("Missing settings.ini file... exiting.")
 
     config.read('config.ini')
     api_id = config['AUTH']['API_ID']
@@ -123,7 +122,6 @@ def main() -> None:
 
     if bot_token == "DUMMY":
         print("Bot token missing in config.ini file... exiting.")
-        exit(-1)
         
 
     # Create the Updater and pass it your bot's token.
