@@ -56,6 +56,8 @@ def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
 def answer(update: telegram.Update, _: CallbackContext) -> None:
     try:
         question = update.message.text
+        update.message.bot.send_chat_action(update.message.chat.id, 'typing')
+
         result = chocolateo.web_scrape(question[9:])
 
         if result[1] != "":
