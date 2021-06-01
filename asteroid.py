@@ -113,7 +113,7 @@ def main() -> None:
     # parsing config.ini file
     config = ConfigParser()
     if not path.isfile('config.ini'):
-        printf("Missing settings.ini file... exiting.")
+        printf("Missing config.ini file... exiting.")
         exit(-1)
 
     config.read('config.ini')
