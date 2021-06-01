@@ -20,11 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 def start(update: telegram.Update, _: CallbackContext) -> None:
-    user = update.effective_user
-    update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}\!',
-        reply_markup=telegram.ForceReply(selective=True),
-    )
+    text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
+           'news and updates!\n\nControl me by these commands:\n\n/echo - replies the text ' \
+           'back\n/answerx  - searches ' \
+           'for related website/info on the internet ' \
+           'with the given text\n/info ' \
+           '- find info about someone or ' \
+           'something\n/scrape - ' \
+           'helps you scrape the web by ' \
+           'commands\n/audio - converts the text ' \
+           'to audio file\n\n Have fun using me! 😄'
+    update.message.reply_text(text)
 
 
 def help_command(update: telegram.Update, _: CallbackContext) -> None:
