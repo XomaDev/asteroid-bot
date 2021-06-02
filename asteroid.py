@@ -20,17 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 def start(update: telegram.Update, _: CallbackContext) -> None:
-    text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
-           'news and updates!\n\nControl me by these commands:\n\n/echo - replies the text ' \
-           'back\n/answerx  - searches ' \
-           'for related website/info on the internet ' \
-           'with the given text\n/info ' \
-           '- find info about someone or ' \
-           'something\n/scrape - ' \
-           'helps you scrape the web by ' \
-           'commands\n/audio - converts the text ' \
-           'to audio file\n\n Have fun using me! 😄'
-    update.message.reply_text(text)
+    user = update.effective_user
+    update.message.reply_markdown_v2(
+        fr'Hi {user.mention_markdown_v2()}\!',
+        reply_markup=telegram.ForceReply(selective=True),
+    )
 
 
 def help_command(update: telegram.Update, _: CallbackContext) -> None:
@@ -62,8 +56,6 @@ def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
 def answer(update: telegram.Update, _: CallbackContext) -> None:
     try:
         question = update.message.text
-        update.message.bot.send_chat_action(update.message.chat.id, 'typing')
-
         result = chocolateo.web_scrape(question[9:])
 
         if result[1] != "":
@@ -121,7 +113,8 @@ def main() -> None:
     # parsing config.ini file
     config = ConfigParser()
     if not path.isfile('config.ini'):
-        print("Missing settings.ini file... exiting.")
+        printf("Missing config.ini file... exiting.")
+        exit(-1)
 
     config.read('config.ini')
     api_id = config['AUTH']['API_ID']
@@ -130,6 +123,7 @@ def main() -> None:
 
     if bot_token == "DUMMY":
         print("Bot token missing in config.ini file... exiting.")
+        exit(-1)
         
 
     # Create the Updater and pass it your bot's token.
