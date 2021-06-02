@@ -130,7 +130,7 @@ def short(update: telegram.Update, _: CallbackContext) -> None:
         if decodedResponse[0:len('Awesome')] == 'Awesome':  # Check ff it's successful
             update.message.reply_text(decodedResponse)
         else:
-            update.message.reply_text('An error occurred while processing the request!') 
+            update.message.reply_text('Error: \n' + decodedResponse)
 
 def main() -> None:
     """Start the bot."""
