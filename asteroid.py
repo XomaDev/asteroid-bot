@@ -118,7 +118,7 @@ def short(update: telegram.Update, _: CallbackContext) -> None:
     if script_url != '':
         target_site = update.message.text[7:]
 
-        if not target_site.startswith('http://') or target_site.startswith('https://'):
+        if not target_site.startswith('http'):
             target_site = 'http://' + target_site
 
         target_location = 'https://script.google.com/macros/s/' + script_url + '/exec?url=' + target_site
