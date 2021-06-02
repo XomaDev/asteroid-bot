@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
+script_url = ''
 
 def start(update: telegram.Update, _: CallbackContext) -> None:
     text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
@@ -114,6 +114,23 @@ def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
     else:
         update.message.reply_text(result[0], parse_mode=parseMode)
 
+def short(update: telegram.Update, _: CallbackContext) -> None:
+    if script_url != '':
+        target_site = update.message.text[7:]
+
+        if not target_site.startswith('http://') or target_site.startswith('https://'):
+            target_site = 'http://' + target_site
+
+        target_location = 'https://script.google.com/macros/s/' + script_url + '/exec?url=' + target_site
+
+        web_request = request.Request(target_location)
+        response = request.urlopen(web_request).read()
+        decodedResponse = response.decode(DECODING_FORMAT)
+
+        if decodedResponse[0:len('Awesome')] == 'Awesome':  # Check ff it's successful
+            update.message.reply_text(decodedResponse)
+        else:
+            update.message.reply_text('An error occurred while processing the request!') 
 
 def main() -> None:
     """Start the bot."""
@@ -148,6 +165,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("info", info))
     dispatcher.add_handler(CommandHandler("audio", texttoaudio))
     dispatcher.add_handler(CommandHandler("scrape", commandScrape))
+    dispatcher.add_handler(CommandHandler("short", short))
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
