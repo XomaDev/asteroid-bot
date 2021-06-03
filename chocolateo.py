@@ -7,6 +7,8 @@
 
 from urllib import request
 from urllib.parse import quote
+
+from functions import stylish_text, checkForURLs
 from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 from bs4 import BeautifulSoup
 
@@ -34,6 +36,7 @@ DICTIONARY_MEANING_TAG = "L1jWkf h3TRxf"
 
 SEARCH_RESULT_TYPE = "span"
 SEARCH_RESULT_TAG = "aCOpRe"
+SEARCH_RESULT_TAG1 = "IsZvec"
 SEARCH_MATCH_TYPE = "cite"
 SEARCH_MATCH_TAG = "iUh30 Zu0yb qLRx3b tjvcx"
 
@@ -104,7 +107,11 @@ def web_scrape(text):
 
     if len(FINAL_RESULT) == 0:
         soup = bsSoup
-        FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
+        try:
+            FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
+        except:
+            FINAL_RESULT = soup.find('div', {"class": SEARCH_RESULT_TAG1}).getText()
+
         text = soup.find(SEARCH_MATCH_TYPE, {"class": SEARCH_MATCH_TAG}).getText()
         MATCH_SOURCE_NAME = text.replace(" › ", "/")
 
@@ -123,6 +130,17 @@ def web_scrape(text):
                     FINAL_RESULT = soup.find("span", {"class": "hgKElc"}).getText()
                 except:
                     FINAL_RESULT = soup.find("div", {"class": "iKJnec"}).getText()
+
+    soup1 = BeautifulSoup(decodedResponse, "lxml")
+
+    search_suggestion = soup1.find('a',
+                                  {"id": 'fprsl'})
+
+    search_suggestion_text = ''
+    if search_suggestion is not None:
+        search_suggestion_text = 'Did you mean ' + stylish_text(search_suggestion.getText()) + ';'
+
+    FINAL_RESULT = search_suggestion_text + ' ' + FINAL_RESULT
 
     return [FINAL_RESULT, MATCH_SOURCE_NAME]
 
