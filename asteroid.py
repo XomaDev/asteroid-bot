@@ -61,22 +61,25 @@ def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
 
 
 def answer(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        question = update.message.text
-        result = chocolateo.web_scrape(question[9:])
+    if len(update.message.text) > 9:
+        question = update.message.text[9:]
+        update.message.bot.send_chat_action(update.message.chat.id, 'typing')
 
-        if result[1] != "":
-            if result[0] != "":
-                buttons = [[telegram.InlineKeyboardButton(text="More info", url=result[1])]]
-
-                keyboard = telegram.InlineKeyboardMarkup(buttons)
-                update.message.bot.sendMessage(update.message.chat_id, text=functions.enhanceText(result[0]),
-                                               reply_markup=keyboard)
+        if " ".join(functions.checkForURLs(question)) == question:
+            update.message.reply_text('I cannot search for just URL! Add some keywords or tags!')
         else:
-            text = result[0] + "\n\n" + result[1]
-            update.message.reply_text(text)
-    except:
-        pass
+            result = chocolateo.web_scrape(question)
+
+            if result[1] != "":
+                if result[0] != "":
+                    buttons = [[telegram.InlineKeyboardButton(text="More info", url=result[1])]]
+
+                    keyboard = telegram.InlineKeyboardMarkup(buttons)
+                    update.message.bot.sendMessage(update.message.chat_id, text=functions.enhanceText(result[0]),
+                                                   reply_markup=keyboard)
+            else:
+                text = result[0] + "\n\n" + result[1]
+                update.message.reply_text(text)
 
 
 def info(update: telegram.Update, _: CallbackContext) -> None:
@@ -166,6 +169,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("audio", texttoaudio))
     dispatcher.add_handler(CommandHandler("scrape", commandScrape))
     dispatcher.add_handler(CommandHandler("short", short))
+    dispatcher.add_handler(CommandHandler("echo", echo))
+    
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
