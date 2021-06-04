@@ -1,14 +1,15 @@
 import logging
 
-from urllib import request
+from os import path
 import telegram
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 import better_profanity
 
+from configparser import ConfigParser
+import bingfo
 import chocolateo
 import commandscrape
 import functions
-from info import DECODING_FORMAT
 from texttoaudio import toAudio
 
 logging.basicConfig(
@@ -16,9 +17,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-script_url = 'AKfycbxJ2z8PwKW2BxLd3oMDUqI7JbcyqKUG9tOinKkTfrATE_lt8O2N'
-
+script_url = ''
 
 def start(update: telegram.Update, _: CallbackContext) -> None:
     text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
@@ -52,40 +51,35 @@ def filterText(update: telegram.Update, _: CallbackContext) -> None:
 
 
 def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.bot.send_chat_action(update.message.chat.id, 'record_voice')
-    text = update.message.text[7:]
-    if not better_profanity.profanity.contains_profanity(update.message.text):
-        update.message.bot.sendAudio(update.message.chat_id, toAudio(text), title="asteroid.mp3",
-                                     caption=update.message.from_user.username)
+    try:
+        text = update.message.text[7:]
+        if not better_profanity.profanity.contains_profanity(update.message.text):
+            update.message.bot.sendAudio(update.message.chat_id, toAudio(text), title="asteroid.mp3",
+                                         caption=update.message.from_user.username)
+    except Exception:
+        pass
 
 
 def answer(update: telegram.Update, _: CallbackContext) -> None:
-    if len(update.message.text) > 9:
-        question = update.message.text[9:]
-        update.message.bot.send_chat_action(update.message.chat.id, 'typing')
+    try:
+        question = update.message.text
+        result = chocolateo.web_scrape(question[9:])
 
-        joined = " ".join(functions.checkForURLs(question))
+        if result[1] != "":
+            if result[0] != "":
+                buttons = [[telegram.InlineKeyboardButton(text="More info", url=result[1])]]
 
-        if joined == question:
-            update.message.reply_text('I cannot search for just URL! Add some keywords or tags! If you believe this is '
-                                      'a valid search, this keyword(s) may be not searchable.')
+                keyboard = telegram.InlineKeyboardMarkup(buttons)
+                update.message.bot.sendMessage(update.message.chat_id, text=functions.enhanceText(result[0]),
+                                               reply_markup=keyboard)
         else:
-            result = chocolateo.web_scrape(question)
-
-            if result[1] != "":
-                if result[0] != "":
-                    buttons = [[telegram.InlineKeyboardButton(text="More info", url=result[1])]]
-
-                    keyboard = telegram.InlineKeyboardMarkup(buttons)
-                    update.message.bot.sendMessage(update.message.chat_id, text=functions.enhanceText(result[0]),
-                                                   reply_markup=keyboard)
-            else:
-                text = result[0] + "\n\n" + result[1]
-                update.message.reply_text(text)
+            text = result[0] + "\n\n" + result[1]
+            update.message.reply_text(text)
+    except:
+        pass
 
 
 def info(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.bot.send_chat_action(update.message.chat.id, 'typing')
     try:
         i = update.message.text
         result = chocolateo.bingScrape(i[6:])
@@ -103,25 +97,6 @@ def delete(update: telegram.Update, _: CallbackContext) -> None:
         pass
 
 
-# def parse(update: telegram.Update, _: CallbackContext) -> None:
-#     result = natural_language_parser.processText(update.message.text[7:])
-#     print(result)
-#     update.message.reply_text(result)
-
-
-
-def slap(update: telegram.Update, _: CallbackContext) -> None:
-    username = update.message.from_user.username
-
-    try:
-        target_user = update.message.reply_to_message.from_user.username
-    except:
-        update.message.reply_text('Reply to a message that I can slap!')
-        return
-    import slap
-    update.message.reply_text(slap.slap(username, target_user))
-
-
 def base64(update: telegram.Update, _: CallbackContext) -> None:
     try:
         update.message.reply_text(functions.encode(update.message.text[8:]))
@@ -133,11 +108,11 @@ def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
     result = commandscrape.command_scrape(update.message.text[8:])
     parseMode = 'MarkdownV2'
 
+
     if result[1] == -1:
         update.message.reply_text(result[0])
     else:
         update.message.reply_text(result[0], parse_mode=parseMode)
-
 
 def short(update: telegram.Update, _: CallbackContext) -> None:
     if script_url != '':
@@ -157,12 +132,31 @@ def short(update: telegram.Update, _: CallbackContext) -> None:
         else:
             update.message.reply_text('Error: \n' + decodedResponse)
 
-
 def main() -> None:
-    updater = Updater("1760053369:AAG7IPxbxrGHAJcNUqY60hAu3oiFao_8NRQ")
+    """Start the bot."""
+    # parsing config.ini file
+    config = ConfigParser()
+    if not path.isfile('config.ini'):
+        printf("Missing config.ini file... exiting.")
+        exit(-1)
 
+    config.read('config.ini')
+    api_id = config['AUTH']['API_ID']
+    api_hash = config['AUTH']['API_HASH']
+    bot_token = comnfig['AUTH']['bot_token']
+
+    if bot_token == "DUMMY":
+        print("Bot token missing in config.ini file... exiting.")
+        exit(-1)
+        
+
+    # Create the Updater and pass it your bot's token.
+    updater = Updater(bot_token) # BOT TOKEN
+
+    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
+    # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("answerx", answer))
@@ -172,12 +166,15 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("audio", texttoaudio))
     dispatcher.add_handler(CommandHandler("scrape", commandScrape))
     dispatcher.add_handler(CommandHandler("short", short))
-    dispatcher.add_handler(CommandHandler("echo", echo))
-    dispatcher.add_handler(CommandHandler("slap", slap))
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
+    # Start the Bot
     updater.start_polling()
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
