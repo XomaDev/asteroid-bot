@@ -8,12 +8,16 @@
 from urllib import request
 from urllib.parse import quote
 
-from functions import stylish_text, checkForURLs
-from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 from bs4 import BeautifulSoup
+
+from functions import stylish_text
+from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 
 SEARCH_URL = "https://www.google.com/search?q="
 BING_SEARCH_URL = "https://www.bing.com/search?q="
+
+no_search_result = 'Your search keywords did not match any results.\n\n- Make sure that all words are spelled ' \
+                   'correctly.\n- Try different keywords.\n- Try more general keywords. '
 
 # Wikipedia values
 
@@ -40,6 +44,9 @@ SEARCH_RESULT_TAG1 = "IsZvec"
 SEARCH_MATCH_TYPE = "cite"
 SEARCH_MATCH_TAG = "iUh30 Zu0yb qLRx3b tjvcx"
 
+SEARCH_TAG_NUM_TYPE = 'div'
+SEARCH_TAG_NUM_TAG = 'result-stats'
+
 
 def web_scrape(text):
     FINAL_RESULT = ""
@@ -54,6 +61,7 @@ def web_scrape(text):
     decodedResponse = response.decode(DECODING_FORMAT)
 
     bsSoup = BeautifulSoup(decodedResponse, HTML_PARSE_FORMAT)
+
 
     soup = bsSoup
 
@@ -106,11 +114,19 @@ def web_scrape(text):
     # Search
 
     if len(FINAL_RESULT) == 0:
+        can_proceed = True
         soup = bsSoup
         try:
             FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
         except:
-            FINAL_RESULT = soup.find('div', {"class": SEARCH_RESULT_TAG1}).getText()
+            try:
+                FINAL_RESULT = soup.find('div', {"class": SEARCH_RESULT_TAG1}).getText()
+            except:
+                FINAL_RESULT = no_search_result
+                can_proceed = False
+
+        if not can_proceed:
+            return [FINAL_RESULT, '']
 
         text = soup.find(SEARCH_MATCH_TYPE, {"class": SEARCH_MATCH_TAG}).getText()
         MATCH_SOURCE_NAME = text.replace(" › ", "/")
@@ -134,7 +150,7 @@ def web_scrape(text):
     soup1 = BeautifulSoup(decodedResponse, "lxml")
 
     search_suggestion = soup1.find('a',
-                                  {"id": 'fprsl'})
+                                   {"id": 'fprsl'})
 
     search_suggestion_text = ''
     if search_suggestion is not None:
