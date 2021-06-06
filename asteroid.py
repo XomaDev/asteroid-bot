@@ -59,6 +59,11 @@ def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
     except Exception:
         pass
 
+    
+def answerx(update: telegram.Update, _: CallbackContext) -> None:
+    update.message.reply_text('/answerx command is deprected! Use /answerx command!')
+    
+    
 
 def answer(update: telegram.Update, _: CallbackContext) -> None:
     try:
@@ -159,7 +164,8 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("answerx", answer))
+    dispatcher.add_handler(CommandHandler("answerx", answerx))
+    dispatcher.add_handler(CommandHandler("answer", answer))
     dispatcher.add_handler(CommandHandler("delete", delete))
     dispatcher.add_handler(CommandHandler("base64", base64))
     dispatcher.add_handler(CommandHandler("info", info))
