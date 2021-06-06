@@ -61,7 +61,7 @@ def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
 
     
 def answerx(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.reply_text('/answerx command is deprected! Use /answerx command!')
+    update.message.reply_text('/answerx command is deprected! Use /answer command!')
     
     
 
