@@ -8,3 +8,8 @@ idna==2.8
 six==1.12.0
 better-profanity==0.7.0
 python-telegram-bot==13.5
+exifread==2.3.2
+requests==2.25.1
+geopy==2.1.0
+geographiclib==1.50
+pillow==8.2.0
