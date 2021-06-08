@@ -110,18 +110,18 @@ def base64(update: telegram.Update, _: CallbackContext) -> None:
         pass
     
 def quote(update: telegram.Update, _: CallbackContext) -> None:
-    target_url = 'https://zenquotes.io/api/random'
+    target_url = 'https://api.quotable.io/random'
     req = requests.get(target_url)
     if req.status_code == 200:
         result = req.text
-        result1 = json.loads(result)[0]
+        result1 = json.loads(result)
 
-        quote1 = functions.replace_special_slash(result1['q'])
-        author = functions.replace_special_slash(result1['a'])
+        quote1 = functions.replace_special_slash(result1['content'])
+        author = functions.replace_special_slash(result1['author'])
 
         update.message.reply_markdown_v2(quote1 + '\n\n' + '\- ' + functions.stylish_text(author))
     else:
-        update.message.reply_text('I could not find any thoughts!')    
+        update.message.reply_text('I could not find any thoughts!') 
     
 def exif_data(update: telegram.Update, _: CallbackContext) -> None:
     uncompressed_message = 'Reply to a message with an image sent uncompressed. Else the replied message do ' \
