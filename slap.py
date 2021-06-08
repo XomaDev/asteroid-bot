@@ -1,9 +1,8 @@
 import random
-import textblob
-from urllib import request
 import re
-import nltk
+from urllib import request
 
+import nltk
 from nltk.corpus import words
 from nltk.stem import WordNetLemmatizer
 from textblob import TextBlob
@@ -40,18 +39,18 @@ def withEmojis(text):
     words = text.split(" ")
 
     result = 0
-    textRes = ''
+    texztRes = ''
 
     for feedback in words:
         feedback_polarity = TextBlob(feedback).sentiment.polarity
 
         result = result + feedback_polarity
 
-    positiveEmojis = '😀 😃 😄 😁 ☺ ️😇 😊 🙂 🙃 😉 😌 😍 🥰 😝 🥳 🤩 😎 🤓'.split(' ')
+    positiveEmojis = '😀 😃 😄 😁 ☺️ ️😇 😊 🙂 🙃 😉 😌 😍 🥰  🥳 🤩 😎 🤓'.split(' ')
     moderateEmojis = '😮 😐 😑 😓 🤔 🤥 😯 🤫 😲 😮'.split(' ')
     negativeEmojis = '😧 🥺 😢 😭 😩 😩 😮 😦 😦 😣 😖 ☹ ️ 🙁 😕 😟 😔 😞 😰 😥 😨'.split(' ')
 
-    if result > 0.5:
+    if result > 0:
         textRes = replaceSpaceEmojis(positiveEmojis, text)
     elif result == 0:
         textRes = replaceSpaceEmojis(moderateEmojis, text)
