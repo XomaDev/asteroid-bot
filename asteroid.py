@@ -109,8 +109,21 @@ def base64(update: telegram.Update, _: CallbackContext) -> None:
     except:
         pass
     
+def quote(update: telegram.Update, _: CallbackContext) -> None:
+    target_url = 'https://zenquotes.io/api/random'
+    req = requests.get(target_url)
+    if req.status_code == 200:
+        result = req.text
+        result1 = json.loads(result)[0]
+
+        quote1 = functions.replace_special_slash(result1['q'])
+        author = functions.replace_special_slash(result1['a'])
+
+        update.message.reply_markdown_v2(quote1 + '\n\n' + '\- ' + functions.stylish_text(author))
+    else:
+        update.message.reply_text('I could not find any thoughts!')    
+    
 def exif_data(update: telegram.Update, _: CallbackContext) -> None:
-    document = None
     uncompressed_message = 'Reply to a message with an image sent uncompressed. Else the replied message do ' \
                            'not have any image file.'
 
@@ -118,6 +131,7 @@ def exif_data(update: telegram.Update, _: CallbackContext) -> None:
         document = update.message.reply_to_message.document
     except:
         update.message.reply_text(uncompressed_message)
+        return ()
 
     supported_formats = ['jpg', 'jpeg', 'png']
 
@@ -140,7 +154,22 @@ def exif_data(update: telegram.Update, _: CallbackContext) -> None:
                                       'JPG and JPEG')
     else:
         update.message.reply_text(uncompressed_message)
+        
+def emote(update: telegram.Update, _: CallbackContext) -> None:
+    text = update.message.text
 
+    try:
+        if not len(text) > 7:
+            text = update.message.reply_to_message.text
+            text = text[7:]
+    except:
+        update.message.reply_text('I could not find any message replied or add some text after the command.')
+        return ()
+    try:
+        import slap
+        update.message.reply_text(slap.withEmojis(text))
+    except:
+        update.message.reply_text('I could not add emotes!')
 
 def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
     result = commandscrape.command_scrape(update.message.text[8:])
@@ -206,6 +235,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("scrape", commandScrape))
     dispatcher.add_handler(CommandHandler("short", short))
     dispatcher.add_handler(CommandHandler("exif", exif_data))
+    dispatcher.add_handler(CommandHandler("emote", emote))
+    dispatcher.add_handler(CommandHandler("quote", quote))
 
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
 
