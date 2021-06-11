@@ -116,7 +116,7 @@ def web_scrape(text):
         try:
             for tag in soup.find_all(DICTIONARY_TAGS_TYPE, {'jsname': DICTIONARY_TAGS_TAG, 'class': 'ArKEkc'}):
                 tagText = tag.getText()
-                if tagText != 'All':
+                if tagText != 'all':
                     tags.append(tag.getText())
             if len(tags) != 0:
                 relatedTags = functions.stylish_text('[related-tags: ' + ', '.join(tags) + ']') + '\n'
