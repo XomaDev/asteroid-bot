@@ -23,15 +23,21 @@ script_url = ''
 def start(update: telegram.Update, _: CallbackContext) -> None:
     text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
            'news and updates!\n\nControl me by these commands:\n\n/echo - replies the text ' \
-           'back\n/answerx  - searches ' \
+           'back\n/answer  - searches ' \
            'for related website/info on the internet ' \
            'with the given text\n/info ' \
            '- find info about someone or ' \
            'something\n/scrape - ' \
            'helps you scrape the web by ' \
-           'commands\n/audio - converts the text ' \
+           'commands\n/audio - converts the text\n' \
+           '/base64 - converts text to base 64\n' \
+           "/short - shorts the URL using Peico's service\n" \
+           '/slaps - slaps the user using some funny sentences\n' \
+           '/exif - extract the exif data from images files sent uncompressed\n' \
+           '/emote - to know the sentiment recognition of a text through emojis\n' \
+           '/quote - tells a random thought or quote\n' \
            'to audio file\n\n Have fun using me! 😄\n' \
-           'Ⴆყ 𝗖𝗼𝗹𝗼𝗿𝗖𝘂𝗯𝗲𝘀'
+           'Ⴆყ 𝗖𝗼𝗹𝗼𝗿𝗧𝗵𝗶𝗻𝗴𝘀'
     update.message.reply_text(text)
 
 
