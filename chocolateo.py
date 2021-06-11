@@ -10,6 +10,7 @@ from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
+import functions
 from functions import stylish_text
 from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 
@@ -35,7 +36,10 @@ DICTIONARY_EXAMPLE_TAG = "H9KYcb"
 DICTIONARY_EXTRA_TAG = "qFRZdb"
 DICTIONARY_MEANING_TYPE = "div"
 DICTIONARY_MEANING_TAG = "L1jWkf h3TRxf"
-
+DICTIONARY_TITLE_TAG = "RjReFf"
+DICTIONARY_TITLE_TYPE = 'div'
+DICTIONARY_TAGS_TAG = 'ibnC6b'
+DICTIONARY_TAGS_TYPE = 'div'
 # Search results
 
 SEARCH_RESULT_TYPE = "span"
@@ -61,7 +65,6 @@ def web_scrape(text):
     decodedResponse = response.decode(DECODING_FORMAT)
 
     bsSoup = BeautifulSoup(decodedResponse, HTML_PARSE_FORMAT)
-
 
     soup = bsSoup
 
@@ -100,6 +103,7 @@ def web_scrape(text):
 
     meanings = soup.find_all(DICTIONARY_MEANING_TYPE,
                              {"class": DICTIONARY_MEANING_TAG})
+
     meanings_arranged = []
 
     for meaning in meanings:
@@ -108,8 +112,33 @@ def web_scrape(text):
         meanings_arranged.append(text)
 
     if len(meanings_arranged) > 0:
+        tags = []
+        try:
+            for tag in soup.find_all(DICTIONARY_TAGS_TYPE, {'jsname': DICTIONARY_TAGS_TAG, 'class': 'ArKEkc'}):
+                tagText = tag.getText()
+                if tagText != 'All':
+                    tags.append(tag.getText())
+            if len(tags) != 0:
+                relatedTags = functions.stylish_text('[related-tags: ' + ', '.join(tags) + ']') + '\n'
+            else:
+                relatedTags = None
+        except ValueError:
+            relatedTags = '[tags: No tag found]'
+
         for meaning in meanings_arranged:
-            FINAL_RESULT = FINAL_RESULT + "-  " + meaning + "\n\n"
+            FINAL_RESULT = FINAL_RESULT + "—  " + meaning + "\n\n"
+        if len(meanings_arranged) == 1:
+            FINAL_RESULT = FINAL_RESULT[2:]
+        meaning_title = soup.find(DICTIONARY_TITLE_TYPE, {'class': DICTIONARY_TITLE_TAG})
+
+        if relatedTags is None:
+            relatedTags = ''
+
+        try:
+            FINAL_RESULT = '[𝗺𝗲𝗮𝗻𝗶𝗻𝗴: ' + functions.stylish_text(
+                meaning_title.getText()) + ']\n' + relatedTags + '\n' + FINAL_RESULT
+        except ValueError:
+            FINAL_RESULT = '[𝗺𝗲𝗮𝗻𝗶𝗻𝗴]\n\n' + FINAL_RESULT
 
     # Search
 
