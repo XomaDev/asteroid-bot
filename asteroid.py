@@ -1,259 +1,217 @@
-import logging
+# Requirements:
+#
+# - URLLIB
+# - BeautifulSoup
+# - LXML
 
-from os import path
-import telegram
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
-import better_profanity
 
-from configparser import ConfigParser
-import bingfo
-import chocolateo
-import exifextract
-import commandscrape
+from urllib import request
+from urllib.parse import quote
+
+from bs4 import BeautifulSoup
+
 import functions
-from texttoaudio import toAudio
+from functions import stylish_text
+from info import USER_AGENT, DECODING_FORMAT, HTML_PARSE_FORMAT
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+SEARCH_URL = "https://www.google.com/search?q="
+BING_SEARCH_URL = "https://www.bing.com/search?q="
 
-logger = logging.getLogger(__name__)
-script_url = ''
+no_search_result = 'Your search keywords did not match any results.\n\n- Make sure that all words are spelled ' \
+                   'correctly.\n- Try different keywords.\n- Try more general keywords. '
 
-def start(update: telegram.Update, _: CallbackContext) -> None:
-    text = 'I am an intelligent bot for web-scrapping, finding/searching info and more! Join @AsteroidDiscuss for ' \
-           'news and updates!\n\nControl me by these commands:\n\n/echo - replies the text ' \
-           'back\n/answer  - searches ' \
-           'for related website/info on the internet ' \
-           'with the given text\n/info ' \
-           '- find info about someone or ' \
-           'something\n/scrape - ' \
-           'helps you scrape the web by ' \
-           'commands\n/audio - converts the text\n' \
-           '/base64 - converts text to base 64\n' \
-           "/short - shorts the URL using Peico's service\n" \
-           '/slaps - slaps the user using some funny sentences\n' \
-           '/exif - extract the exif data from images files sent uncompressed\n' \
-           '/emote - to know the sentiment recognition of a text through emojis\n' \
-           '/quote - tells a random thought or quote\n' \
-           'to audio file\n\n Have fun using me! 😄\n' \
-           'Ⴆყ 𝗖𝗼𝗹𝗼𝗿𝗧𝗵𝗶𝗻𝗴𝘀'
-    update.message.reply_text(text)
+# Wikipedia values
 
+WIKI_RESULT_TAG = "ruhjFe NJLBac fl"
+WIKI_RESULT_TYPE = "a"
+WIKI_FINAL_RESULT_TAG = "kno-rdesc"
+WIKI_FINAL_RESULT_TYPE = "div"
+WIKI_HEADING_TYPE = "h2"
+WIKI_HEAD_TAG = "qrShPb"
 
-def help_command(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.reply_text('Help!')
+# Dictionary values
 
+DICTIONARY_EXAMPLE_EXTRA_TYPE = "div"
+DICTIONARY_EXAMPLE_TAG = "H9KYcb"
+DICTIONARY_EXTRA_TAG = "qFRZdb"
+DICTIONARY_MEANING_TYPE = "div"
+DICTIONARY_MEANING_TAG = "LTKOO sY7ric"
+DICTIONARY_TITLE_TAG = "RjReFf"
+DICTIONARY_TITLE_TYPE = 'div'
+DICTIONARY_TAGS_TAG = 'ibnC6b'
+DICTIONARY_TAGS_TYPE = 'div'
+# Search results
 
-def echo(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.reply_text(update.message.text)
+SEARCH_RESULT_TYPE = "span"
+SEARCH_RESULT_TAG = "aCOpRe"
+SEARCH_RESULT_TAG1 = "IsZvec"
+SEARCH_MATCH_TYPE = "cite"
+SEARCH_MATCH_TAG = "iUh30 Zu0yb qLRx3b tjvcx"
 
-
-def filterText(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        if better_profanity.profanity.contains_profanity(update.message.text):
-            update.message.bot.deleteMessage(chat_id=update.message.chat.id, message_id=update.message.message_id)
-    except:
-        pass
+SEARCH_TAG_NUM_TYPE = 'div'
+SEARCH_TAG_NUM_TAG = 'result-stats'
 
 
-def texttoaudio(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        text = update.message.text[7:]
-        if not better_profanity.profanity.contains_profanity(update.message.text):
-            update.message.bot.sendAudio(update.message.chat_id, toAudio(text), title="asteroid.mp3",
-                                         caption=update.message.from_user.username)
-    except Exception:
-        pass
+def web_scrape(text):
+    FINAL_RESULT = ""
+    MATCH_SOURCE_NAME = ""
 
-    
-def answerx(update: telegram.Update, _: CallbackContext) -> None:
-    update.message.reply_text('/answerx command is deprecated! Use /answer command!')
-    
-    
+    targetURL = SEARCH_URL + quote(text, safe='')
 
-def answer(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        question = update.message.text
-        result = chocolateo.web_scrape(question[9:])
+    web_request = request.Request(targetURL)
+    web_request.add_header("User-Agent", USER_AGENT)
 
-        if result[1] != "":
-            if result[0] != "":
-                buttons = [[telegram.InlineKeyboardButton(text="More info", url=result[1])]]
+    response = request.urlopen(web_request).read()
+    decodedResponse = response.decode(DECODING_FORMAT)
 
-                keyboard = telegram.InlineKeyboardMarkup(buttons)
-                update.message.bot.sendMessage(update.message.chat_id, text=functions.enhanceText(result[0]),
-                                               reply_markup=keyboard)
-        else:
-            text = result[0] + "\n\n" + result[1]
-            update.message.reply_text(text)
-    except:
-        pass
+    bsSoup = BeautifulSoup(decodedResponse, HTML_PARSE_FORMAT)
 
+    soup = bsSoup
 
-def info(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        i = update.message.text
-        result = chocolateo.bingScrape(i[6:])
-        update.message.reply_text(result)
-    except:
-        pass
+    # Wikipedia search
 
+    for heading in \
+            soup.select("h3"):
+        heading.decompose()
 
-def delete(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        update.message.bot.deleteMessage(chat_id=update.message.chat.id,
-                                         message_id=update.message.reply_to_message.message_id)
-        update.message.bot.deleteMessage(chat_id=update.message.chat.id, message_id=update.message.message_id)
-    except:
-        pass
+    for tag in \
+            soup.select(WIKI_RESULT_TYPE, {"class": WIKI_RESULT_TAG}):
+        tag.decompose()
 
+    wikipediaResult = soup.find(WIKI_FINAL_RESULT_TYPE,
+                                {"class": WIKI_FINAL_RESULT_TAG})
 
-def base64(update: telegram.Update, _: CallbackContext) -> None:
-    try:
-        update.message.reply_text(functions.encode(update.message.text[8:]))
-    except:
-        pass
-    
-def quote(update: telegram.Update, _: CallbackContext) -> None:
-    target_url = 'https://api.quotable.io/random'
-    req = requests.get(target_url)
-    if req.status_code == 200:
-        result = req.text
-        result1 = json.loads(result)
+    if str(wikipediaResult) != "None":
+        FINAL_RESULT = wikipediaResult.getText()
+        try:
+            MATCH_SOURCE_NAME = "https://en.m.wikipedia.org/wiki/" + \
+                                soup.find(WIKI_HEADING_TYPE, {"class": WIKI_HEAD_TAG}).getText().replace(" ", "_")
+        except AttributeError:
+            pass
 
-        quote1 = functions.replace_special_slash(result1['content'])
-        author = functions.replace_special_slash(result1['author'])
+    # Dictionary
 
-        update.message.reply_markdown_v2(quote1 + '\n\n' + '\- ' + functions.stylish_text(author))
-    else:
-        update.message.reply_text('I could not find any thoughts!') 
-    
-def exif_data(update: telegram.Update, _: CallbackContext) -> None:
-    uncompressed_message = 'Reply to a message with an image sent uncompressed. Else the replied message do ' \
-                           'not have any image file.'
+    soup = bsSoup
 
-    try:
-        document = update.message.reply_to_message.document
-    except:
-        update.message.reply_text(uncompressed_message)
-        return ()
+    for tag in soup.find_all(DICTIONARY_EXAMPLE_EXTRA_TYPE,
+                             {"class": DICTIONARY_EXAMPLE_TAG}):
+        tag.decompose()
 
-    supported_formats = ['jpg', 'jpeg', 'png']
+    for tag in soup.find_all(DICTIONARY_EXAMPLE_EXTRA_TYPE,
+                             {"class": DICTIONARY_EXTRA_TAG}):
+        tag.decompose()
 
-    if document is not None:
-        is_supported = False
+    meanings = soup.find_all("div",
+                             {"data-dobid": "dfn"})
 
-        for image_format in supported_formats:
-            if document.file_name.endswith('.' + image_format):
-                is_supported = True
-                break
+    meanings_arranged = []
 
-        if is_supported:
+    for meaning in meanings:
+        text = meaning.getText()
+        text = text[0].upper() + text[1:]
+        print(text)
+        meanings_arranged.append(text)
+
+    # print(meanings_arranged)
+
+    if len(meanings_arranged) > 0:
+        tags = []
+        try:
+            for tag in soup.find_all(DICTIONARY_TAGS_TYPE, {'jsname': DICTIONARY_TAGS_TAG, 'class': 'ArKEkc'}):
+                tagText = tag.getText()
+                if tagText != 'all':
+                    tags.append(tag.getText())
+            if len(tags) != 0:
+                relatedTags = functions.stylish_text('[related-tags: ' + ', '.join(tags) + ']') + '\n'
+            else:
+                relatedTags = None
+        except ValueError:
+            relatedTags = '[tags: No tag found]'
+
+        for meaning in meanings_arranged:
+            FINAL_RESULT = FINAL_RESULT + "—  " + meaning + "\n\n"
+        if len(meanings_arranged) == 1:
+            FINAL_RESULT = FINAL_RESULT[2:]
+        meaning_title = soup.find(DICTIONARY_TITLE_TYPE, {'class': "DgZBFd c8d6zd ya2TWb"})
+
+        if relatedTags is None:
+            relatedTags = ''
+
+        try:
+            FINAL_RESULT = '[𝗺𝗲𝗮𝗻𝗶𝗻𝗴: ' + functions.stylish_text(
+                meaning_title.getText()) + ']\n' + relatedTags + '\n' + FINAL_RESULT
+        except ValueError:
+            FINAL_RESULT = '[𝗺𝗲𝗮𝗻𝗶𝗻𝗴]\n\n' + FINAL_RESULT
+
+    # Search
+
+    if len(FINAL_RESULT) == 0:
+        can_proceed = True
+        soup = bsSoup
+        try:
             try:
-                text = exifextract.extractMetaFromURL(document.get_file().file_path)
-                update.message.reply_text(text)
+                FINAL_RESULT = soup.find("div", {"class":"IsZvec"}).getText()
+            except ValueError:
+                FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
+        except ValueError:
+            try:
+                FINAL_RESULT = soup.find('div', {"class": SEARCH_RESULT_TAG1}).getText()
+            except ValueError:
+                FINAL_RESULT = no_search_result
+                can_proceed = False
+
+        if not can_proceed:
+            return [FINAL_RESULT, '']
+
+        text = soup.find(SEARCH_MATCH_TYPE, {"class": SEARCH_MATCH_TAG}).getText()
+        MATCH_SOURCE_NAME = text.replace(" › ", "/")
+
+        newSoup = BeautifulSoup(decodedResponse, "lxml")
+
+        children = newSoup.find("div", {"class": "tF2Cxc"}).findChildren("a")
+
+        if children[0].get("href") != "":
+            MATCH_SOURCE_NAME = (children[0].get("href"))
+
+        if FINAL_RESULT == "":
+            try:
+                print(3)
+                FINAL_RESULT = soup.find("div", {"class": "RqBzHd"}).getText()
             except:
-                update.message.reply_text('There is no meta data found!')
-        else:
-            update.message.reply_text('The given file format is not supported. The supported formats are PNG, '
-                                      'JPG and JPEG')
-    else:
-        update.message.reply_text(uncompressed_message)
-        
-def emote(update: telegram.Update, _: CallbackContext) -> None:
-    text = update.message.text
+                print(2)
+                try:
+                    FINAL_RESULT = soup.find("span", {"class": "hgKElc"}).getText()
+                except:
+                    print(1)
+                    FINAL_RESULT = soup.find("div", {"class": "iKJnec"}).getText()
+
+    soup1 = BeautifulSoup(decodedResponse, "lxml")
+
+    search_suggestion = soup1.find('a',
+                                   {"id": 'fprsl'})
+
+    search_suggestion_text = ''
+    if search_suggestion is not None:
+        search_suggestion_text = 'Did you mean ' + stylish_text(search_suggestion.getText()) + ';'
+
+    FINAL_RESULT = search_suggestion_text + ' ' + FINAL_RESULT
+
+    return [FINAL_RESULT, MATCH_SOURCE_NAME]
+
+
+def bingScrape(text):
+    targetURL = BING_SEARCH_URL + quote(text, safe='')
+    web_request = request.Request(targetURL)
+    web_request.add_header("User-Agent", USER_AGENT)
+
+    response = request.urlopen(web_request).read()
+    decodedResponse = response.decode(DECODING_FORMAT)
+
+    bsSoup = BeautifulSoup(decodedResponse, HTML_PARSE_FORMAT)
 
     try:
-        if not len(text) > 7:
-            text = update.message.reply_to_message.text
-            text = text[7:]
-    except:
-        update.message.reply_text('I could not find any message replied or add some text after the command.')
-        return ()
-    try:
-        import slap
-        update.message.reply_text(slap.withEmojis(text))
-    except:
-        update.message.reply_text('I could not add emotes!')
+        content = bsSoup.find("div", {"class": "b_lBottom"}).getText()
 
-def commandScrape(update: telegram.Update, _: CallbackContext) -> None:
-    result = commandscrape.command_scrape(update.message.text[8:])
-    parseMode = 'MarkdownV2'
-
-
-    if result[1] == -1:
-        update.message.reply_text(result[0])
-    else:
-        update.message.reply_text(result[0], parse_mode=parseMode)
-
-def short(update: telegram.Update, _: CallbackContext) -> None:
-    if script_url != '':
-        target_site = update.message.text[7:]
-
-        if not target_site.startswith('http'):
-            target_site = 'http://' + target_site
-
-        target_location = 'https://script.google.com/macros/s/' + script_url + '/exec?url=' + target_site
-
-        web_request = request.Request(target_location)
-        response = request.urlopen(web_request).read()
-        decodedResponse = response.decode(DECODING_FORMAT)
-
-        if decodedResponse[0:len('Awesome')] == 'Awesome':  # Check ff it's successful
-            update.message.reply_text(decodedResponse)
-        else:
-            update.message.reply_text('Error: \n' + decodedResponse)
-
-def main() -> None:
-    """Start the bot."""
-    # parsing config.ini file
-    config = ConfigParser()
-    if not path.isfile('config.ini'):
-        print("Missing config.ini file... exiting.")
-        exit(-1)
-
-    config.read('config.ini')
-    api_id = config['AUTH']['API_ID']
-    api_hash = config['AUTH']['API_HASH']
-    bot_token = comnfig['AUTH']['bot_token']
-
-    if bot_token == "DUMMY":
-        print("Bot token missing in config.ini file... exiting.")
-        exit(-1)
-        
-
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(bot_token) # BOT TOKEN
-
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("answerx", answerx))
-    dispatcher.add_handler(CommandHandler("answer", answer))
-    dispatcher.add_handler(CommandHandler("delete", delete))
-    dispatcher.add_handler(CommandHandler("base64", base64))
-    dispatcher.add_handler(CommandHandler("info", info))
-    dispatcher.add_handler(CommandHandler("audio", texttoaudio))
-    dispatcher.add_handler(CommandHandler("scrape", commandScrape))
-    dispatcher.add_handler(CommandHandler("short", short))
-    dispatcher.add_handler(CommandHandler("exif", exif_data))
-    dispatcher.add_handler(CommandHandler("emote", emote))
-    dispatcher.add_handler(CommandHandler("quote", quote))
-
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, filterText))
-
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()
+        return content
+    except Exception:
+        return "No results found"
