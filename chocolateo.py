@@ -35,7 +35,7 @@ DICTIONARY_EXAMPLE_EXTRA_TYPE = "div"
 DICTIONARY_EXAMPLE_TAG = "H9KYcb"
 DICTIONARY_EXTRA_TAG = "qFRZdb"
 DICTIONARY_MEANING_TYPE = "div"
-DICTIONARY_MEANING_TAG = "L1jWkf h3TRxf"
+DICTIONARY_MEANING_TAG = "LTKOO sY7ric"
 DICTIONARY_TITLE_TAG = "RjReFf"
 DICTIONARY_TITLE_TYPE = 'div'
 DICTIONARY_TAGS_TAG = 'ibnC6b'
@@ -101,15 +101,18 @@ def web_scrape(text):
                              {"class": DICTIONARY_EXTRA_TAG}):
         tag.decompose()
 
-    meanings = soup.find_all(DICTIONARY_MEANING_TYPE,
-                             {"class": DICTIONARY_MEANING_TAG})
+    meanings = soup.find_all("div",
+                             {"data-dobid": "dfn"})
 
     meanings_arranged = []
 
     for meaning in meanings:
         text = meaning.getText()
         text = text[0].upper() + text[1:]
+        print(text)
         meanings_arranged.append(text)
+
+    # print(meanings_arranged)
 
     if len(meanings_arranged) > 0:
         tags = []
@@ -129,7 +132,7 @@ def web_scrape(text):
             FINAL_RESULT = FINAL_RESULT + "—  " + meaning + "\n\n"
         if len(meanings_arranged) == 1:
             FINAL_RESULT = FINAL_RESULT[2:]
-        meaning_title = soup.find(DICTIONARY_TITLE_TYPE, {'class': DICTIONARY_TITLE_TAG})
+        meaning_title = soup.find(DICTIONARY_TITLE_TYPE, {'class': "DgZBFd c8d6zd ya2TWb"})
 
         if relatedTags is None:
             relatedTags = ''
@@ -146,11 +149,14 @@ def web_scrape(text):
         can_proceed = True
         soup = bsSoup
         try:
-            FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
-        except:
+            try:
+                FINAL_RESULT = soup.find("div", {"class":"IsZvec"}).getText()
+            except ValueError:
+                FINAL_RESULT = soup.find(SEARCH_RESULT_TYPE, {"class": SEARCH_RESULT_TAG}).getText()
+        except ValueError:
             try:
                 FINAL_RESULT = soup.find('div', {"class": SEARCH_RESULT_TAG1}).getText()
-            except:
+            except ValueError:
                 FINAL_RESULT = no_search_result
                 can_proceed = False
 
@@ -169,11 +175,14 @@ def web_scrape(text):
 
         if FINAL_RESULT == "":
             try:
+                print(3)
                 FINAL_RESULT = soup.find("div", {"class": "RqBzHd"}).getText()
             except:
+                print(2)
                 try:
                     FINAL_RESULT = soup.find("span", {"class": "hgKElc"}).getText()
                 except:
+                    print(1)
                     FINAL_RESULT = soup.find("div", {"class": "iKJnec"}).getText()
 
     soup1 = BeautifulSoup(decodedResponse, "lxml")
